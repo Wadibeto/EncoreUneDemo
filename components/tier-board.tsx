@@ -2,20 +2,21 @@
 
 import { DndContext, DragOverlay, PointerSensor, useSensor, useSensors, type DragEndEvent, type DragStartEvent } from "@dnd-kit/core";
 import { toPng } from "html-to-image";
-import { Download, ImageDown, RotateCcw } from "lucide-react";
+import { Download, ImageDown, Palette, RotateCcw } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { createClient } from "@/lib/supabase/client";
-import { TIERS } from "@/lib/constants";
-import type { Profile, TierItem, TierKey } from "@/lib/types";
+import { ALL_TIER_KEYS, DEFAULT_TIER_CONFIG } from "@/lib/constants";
+import type { Profile, TierDefinition, TierItem, TierKey } from "@/lib/types";
 import { useTierBoardStore } from "@/stores/tier-board-store";
 import { GameCard } from "@/components/game-card";
 import { PlayerBadge } from "@/components/player-badge";
 import { TierRow } from "@/components/tier-row";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { TierSettingsDialog } from "@/components/tier-settings-dialog";
 
-export function TierBoard({ listId, initialItems, currentUser, members }: { listId: string; initialItems: TierItem[]; currentUser: Profile; members: Profile[] }) {
+export function TierBoard({ listId, initialItems, initialConfig, currentUser, members }: { listId: string; initialItems: TierItem[]; initialConfig: TierDefinition[]; currentUser: Profile; members: Profile[] }) {
   const supabase = useMemo(() => createClient(), []);
   const items = useTierBoardStore((state) => state.items);
   const setItems = useTierBoardStore((state) => state.setItems);
@@ -23,6 +24,8 @@ export function TierBoard({ listId, initialItems, currentUser, members }: { list
   const [online, setOnline] = useState<Set<string>>(new Set([currentUser.id]));
   const [confirmReset, setConfirmReset] = useState(false);
   const [resetting, setResetting] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [tierConfig, setTierConfig] = useState<TierDefinition[]>(initialConfig.length === 10 ? initialConfig : DEFAULT_TIER_CONFIG);
   const boardRef = useRef<HTMLDivElement>(null);
   const refreshTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 6 } }));
@@ -32,6 +35,11 @@ export function TierBoard({ listId, initialItems, currentUser, members }: { list
     if (data) setItems(data as unknown as TierItem[]);
   }, [listId, setItems, supabase]);
 
+  const loadConfig = useCallback(async () => {
+    const { data } = await supabase.from("tier_lists").select("tier_config").eq("id", listId).single();
+    if (Array.isArray(data?.tier_config) && data.tier_config.length === 10) setTierConfig(data.tier_config as unknown as TierDefinition[]);
+  }, [listId, supabase]);
+
   useEffect(() => { setItems(initialItems); }, [initialItems, setItems]);
   useEffect(() => {
     const channel = supabase.channel(`tier:${listId}`, { config: { presence: { key: currentUser.id } } })
@@ -40,11 +48,12 @@ export function TierBoard({ listId, initialItems, currentUser, members }: { list
         if (refreshTimer.current) clearTimeout(refreshTimer.current);
         refreshTimer.current = setTimeout(loadItems, 100);
       })
+      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "tier_lists", filter: `id=eq.${listId}` }, loadConfig)
       .subscribe(async (status) => { if (status === "SUBSCRIBED") await channel.track({ username: currentUser.username, at: new Date().toISOString() }); });
     return () => { if (refreshTimer.current) clearTimeout(refreshTimer.current); void supabase.removeChannel(channel); };
-  }, [currentUser.id, currentUser.username, listId, loadItems, supabase]);
+  }, [currentUser.id, currentUser.username, listId, loadConfig, loadItems, supabase]);
 
-  const grouped = useMemo(() => Object.fromEntries(["unranked", ...TIERS.map((tier) => tier.key)].map((key) => [key, items.filter((item) => item.tier === key).sort((a, b) => a.position - b.position)])) as Record<TierKey, TierItem[]>, [items]);
+  const grouped = useMemo(() => Object.fromEntries(ALL_TIER_KEYS.map((key) => [key, items.filter((item) => item.tier === key).sort((a, b) => a.position - b.position)])) as Record<TierKey, TierItem[]>, [items]);
 
   function onDragStart(event: DragStartEvent) { setActiveId(String(event.active.id)); }
   async function onDragEnd(event: DragEndEvent) {
@@ -83,7 +92,7 @@ export function TierBoard({ listId, initialItems, currentUser, members }: { list
   }
 
   function exportJson() {
-    const data = [...TIERS, { key: "unranked" as const, label: "À classer", color: "" }].map((tier) => ({ tier: tier.label, games: grouped[tier.key].map((item) => item.game.title) }));
+    const data = tierConfig.map((tier) => ({ tier: tier.label, color: tier.color, games: grouped[tier.key].map((item) => item.game.title) }));
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
     const link = document.createElement("a"); link.href = URL.createObjectURL(blob); link.download = "duotier-tier-list.json"; link.click(); URL.revokeObjectURL(link.href);
   }
@@ -99,16 +108,16 @@ export function TierBoard({ listId, initialItems, currentUser, members }: { list
     <>
       <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
         <div className="flex flex-wrap gap-2">{members.map((member) => <PlayerBadge key={member.id} profile={member} online={online.has(member.id)} />)}</div>
-        <div className="flex flex-wrap gap-2"><Button variant="ghost" size="sm" onClick={() => setConfirmReset(true)}><RotateCcw className="size-4" />Reset</Button><Button variant="secondary" size="sm" onClick={exportJson}><Download className="size-4" />JSON</Button><Button variant="secondary" size="sm" onClick={exportImage}><ImageDown className="size-4" />Image</Button></div>
+        <div className="flex flex-wrap gap-2"><Button variant="secondary" size="sm" onClick={() => setSettingsOpen(true)}><Palette className="size-4" />Personnaliser</Button><Button variant="ghost" size="sm" onClick={() => setConfirmReset(true)}><RotateCcw className="size-4" />Reset</Button><Button variant="secondary" size="sm" onClick={exportJson}><Download className="size-4" />JSON</Button><Button variant="secondary" size="sm" onClick={exportImage}><ImageDown className="size-4" />Image</Button></div>
       </div>
       <DndContext sensors={sensors} onDragStart={onDragStart} onDragEnd={onDragEnd}>
         <div ref={boardRef} className="space-y-2 rounded-3xl bg-[#0c0d16] p-2 sm:p-4">
-          {TIERS.map((tier) => <TierRow key={tier.key} tierKey={tier.key} label={tier.label} color={tier.color} items={grouped[tier.key]} />)}
-          <TierRow tierKey="unranked" label="À classer" color="bg-slate-800 text-slate-300" items={grouped.unranked} />
+          {tierConfig.map((tier) => <TierRow key={tier.key} tierKey={tier.key} label={tier.label} color={tier.color} items={grouped[tier.key]} />)}
         </div>
         <DragOverlay>{activeItem ? <div className="w-32 rotate-2 opacity-90"><GameCard game={activeItem.game} compact /></div> : null}</DragOverlay>
       </DndContext>
       <ConfirmDialog open={confirmReset} onClose={() => setConfirmReset(false)} onConfirm={reset} busy={resetting} title="Réinitialiser la tier list ?" description="Tous les jeux retourneront dans « À classer »." />
+      <TierSettingsDialog open={settingsOpen} onClose={() => setSettingsOpen(false)} listId={listId} config={tierConfig} onSaved={setTierConfig} />
     </>
   );
 }

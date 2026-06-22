@@ -5,6 +5,8 @@ import { InviteCode } from "@/components/invite-code";
 import { TierBoard } from "@/components/tier-board";
 import { createClient } from "@/lib/supabase/server";
 import type { Profile, TierItem } from "@/lib/types";
+import type { TierDefinition } from "@/lib/types";
+import { DEFAULT_TIER_CONFIG } from "@/lib/constants";
 import { formatDate } from "@/lib/utils";
 
 export default async function TierListPage({ params }: { params: Promise<{ id: string }> }) {
@@ -26,7 +28,7 @@ export default async function TierListPage({ params }: { params: Promise<{ id: s
         <div><p className="flex items-center gap-2 text-sm font-semibold text-violet-300"><ListOrdered className="size-4" />Tier list collaborative</p><h1 className="mt-2 text-3xl font-black">{list.title}</h1><p className="mt-2 text-xs text-slate-500">Créée le {formatDate(list.created_at)} · Mise à jour {formatDate(list.updated_at)}</p></div>
         <InviteCode code={list.invite_code} />
       </div>
-      <TierBoard listId={id} initialItems={items as unknown as TierItem[]} currentUser={profile as Profile} members={members} />
+      <TierBoard listId={id} initialItems={items as unknown as TierItem[]} initialConfig={(list.tier_config as TierDefinition[] | null) ?? DEFAULT_TIER_CONFIG} currentUser={profile as Profile} members={members} />
     </AppShell>
   );
 }

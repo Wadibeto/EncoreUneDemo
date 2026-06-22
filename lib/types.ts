@@ -37,6 +37,12 @@ export type TierItem = {
   game: Game;
 };
 
+export type TierDefinition = {
+  key: TierKey;
+  label: string;
+  color: string;
+};
+
 export type GuessPlayer = {
   session_id: string;
   user_id: string;

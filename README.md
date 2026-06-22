@@ -64,6 +64,7 @@ Le secret n’est pas une colonne de `guess_players`. Il réside dans `guess_pla
 │  ├─ migrations/001_initial_schema.sql
 │  ├─ migrations/002_tier_operations.sql
 │  ├─ migrations/003_api_grants.sql
+│  ├─ migrations/004_tier_customization.sql
 │  ├─ config.toml
 │  └─ seed.sql
 ├─ .env.example, .eslintrc.json, middleware.ts, next.config.ts
@@ -182,6 +183,19 @@ npx vercel env add NEXT_PUBLIC_SUPABASE_URL
 npx vercel env add NEXT_PUBLIC_SUPABASE_ANON_KEY
 npx vercel --prod
 ```
+
+### Publier une modification ultérieure
+
+Pour un changement qui contient une nouvelle migration SQL, appliquez d’abord le schéma hébergé puis poussez le code :
+
+```bash
+npx supabase db push
+git add .
+git commit -m "Description de la modification"
+git push origin main
+```
+
+Si Vercel est connecté à `main`, le `git push` déclenche automatiquement le déploiement. Vérifiez simplement son résultat dans **Vercel → Deployments**. Un redéploiement manuel n’est nécessaire qu’après une modification de variables d’environnement ou si le déploiement automatique a échoué.
 
 ## Modèle de données
 

@@ -20,9 +20,11 @@ function SortableGame({ item }: { item: TierItem }) {
 
 export function TierRow({ tierKey, label, color, items }: { tierKey: TierKey; label: string; color: string; items: TierItem[] }) {
   const { setNodeRef, isOver } = useDroppable({ id: `tier:${tierKey}`, data: { tier: tierKey } });
+  const rgb = color.match(/[a-f\d]{2}/gi)?.map((part) => Number.parseInt(part, 16)) ?? [255, 255, 255];
+  const textColor = rgb[0] * 0.299 + rgb[1] * 0.587 + rgb[2] * 0.114 > 155 ? "#080b12" : "#ffffff";
   return (
     <div className={cn("flex min-h-36 overflow-hidden rounded-2xl border border-white/[0.08] bg-black/20 transition", isOver && "border-violet-400/60 bg-violet-400/[0.06]")}>
-      <div className={cn("flex w-20 shrink-0 items-center justify-center p-2 text-center text-lg font-black sm:w-24", color)}>{label}</div>
+      <div style={{ backgroundColor: color, color: textColor }} className="flex w-20 shrink-0 items-center justify-center break-words p-2 text-center text-sm font-black sm:w-24 sm:text-base">{label}</div>
       <div ref={setNodeRef} className="min-w-0 flex-1 p-2">
         <SortableContext items={items.map((item) => item.id)} strategy={rectSortingStrategy}>
           <div className="flex min-h-28 flex-wrap content-start gap-2">
