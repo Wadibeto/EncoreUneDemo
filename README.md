@@ -63,6 +63,7 @@ Le secret n’est pas une colonne de `guess_players`. Il réside dans `guess_pla
 ├─ supabase/
 │  ├─ migrations/001_initial_schema.sql
 │  ├─ migrations/002_tier_operations.sql
+│  ├─ migrations/003_api_grants.sql
 │  ├─ config.toml
 │  └─ seed.sql
 ├─ .env.example, .eslintrc.json, middleware.ts, next.config.ts
