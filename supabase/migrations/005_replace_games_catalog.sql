@@ -1,5 +1,6 @@
--- 57 games from JeuxMathis.txt. Re-running this seed synchronizes metadata by title
--- and removes games that are no longer part of the catalogue.
+-- Synchronize the hosted catalogue with JeuxMathis.txt.
+-- Removed games are deleted from the catalogue. Guess sessions whose secret used a
+-- removed game are deleted first to satisfy the restrict foreign key.
 drop table if exists pg_temp.sync_games_catalog;
 
 create temp table sync_games_catalog (
