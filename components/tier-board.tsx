@@ -1,5 +1,5 @@
 "use client";
-import { closestCorners, DndContext, DragOverlay, KeyboardSensor, PointerSensor, useSensor, useSensors, type DragEndEvent } from "@dnd-kit/core";
+import { closestCorners, pointerWithin, DndContext, DragOverlay, KeyboardSensor, PointerSensor, useSensor, useSensors, type CollisionDetection, type DragEndEvent } from "@dnd-kit/core";
 import { sortableKeyboardCoordinates } from "@dnd-kit/sortable";
 import { toPng } from "html-to-image";
 import { Check, Download, ImageDown, LoaderCircle, Palette, RotateCcw, Search, Shield, Sparkles, WifiOff } from "lucide-react";
@@ -18,6 +18,13 @@ import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { TierSettingsDialog } from "@/components/tier-settings-dialog";
 import { cn } from "@/lib/utils";
+
+// The grip sits below the card: use the pointer, not the offset card rectangle,
+// to choose the intended row. Keyboard dragging retains spatial navigation.
+const detectDropTarget: CollisionDetection = (args) => {
+  const pointed = pointerWithin(args);
+  return pointed.length ? pointed : closestCorners(args);
+};
 
 export function TierBoard({ listId, initialTitle, initialItems, initialConfig, initialRevision, category, currentUser, members: initialMembers }: { listId: string; initialTitle: string; initialItems: TierItem[]; initialConfig: TierDefinition[]; initialRevision: number; category: TierCategory; currentUser: Profile; members: Profile[] }) {
   const supabase = useMemo(() => createClient(), []);
@@ -142,7 +149,7 @@ export function TierBoard({ listId, initialTitle, initialItems, initialConfig, i
     </div>
     <div className={cn("grid items-start gap-5", selected ? "xl:grid-cols-[minmax(0,1fr)_340px]" : "xl:grid-cols-[minmax(0,1fr)_270px]")}>
       <div className="min-w-0">
-        <DndContext sensors={sensors} collisionDetection={closestCorners} onDragStart={(e) => setActiveId(String(e.active.id))} onDragCancel={() => setActiveId(null)} onDragEnd={onDragEnd}>
+        <DndContext sensors={sensors} collisionDetection={detectDropTarget} onDragStart={(e) => setActiveId(String(e.active.id))} onDragCancel={() => setActiveId(null)} onDragEnd={onDragEnd} accessibility={{ screenReaderInstructions: { draggable: "Pour déplacer une carte, appuyez sur Espace, utilisez les flèches, puis Espace pour déposer. Échap annule. Vous pouvez aussi choisir un rang dans la fiche." }, announcements: { onDragStart: ({ active }) => `${itemTitle(items.find((item) => item.id === active.id)!)} sélectionné.`, onDragOver: ({ over }) => over ? "Zone de dépôt atteinte." : "Hors d’une zone de dépôt.", onDragEnd: ({ over }) => over ? "Carte déposée. Enregistrement du classement." : "Déplacement annulé.", onDragCancel: () => "Déplacement annulé." } }}>
           <div ref={boardRef} className="space-y-2 rounded-2xl bg-[#141a15] p-2 sm:p-3">
             <div className="flex items-center justify-between px-2 pb-3 pt-1"><h2 className="display-font text-xl text-[#e7d9bd]">{title}</h2><span className="eyebrow">DuoTier</span></div>
             {tierConfig.filter((tier) => tier.key !== "unranked").map((tier) => <TierRow key={tier.key} tierKey={tier.key} label={tier.label} color={tier.color} items={grouped[tier.key] ?? []} selectedId={selectedId} onInspect={setSelectedId} disabled={disabled} />)}
