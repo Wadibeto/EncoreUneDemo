@@ -19,11 +19,11 @@ export function TierRow({ tierKey, label, color, items, selectedId, onInspect, d
   const { setNodeRef, isOver } = useDroppable({ id: `tier:${tierKey}`, disabled, data: { tier: tierKey } });
   const rgb = color.match(/[a-f\d]{2}/gi)?.map((part) => Number.parseInt(part, 16)) ?? [255, 255, 255];
   const textColor = rgb[0] * .299 + rgb[1] * .587 + rgb[2] * .114 > 155 ? "#151912" : "#ffffff";
-  return <div className={cn("flex min-h-28 overflow-hidden rounded-xl border transition", isOver ? "border-[#d3b578] bg-[#c8ad76]/10" : "border-white/[.08] bg-black/10", unranked && "flex-col")}>
-    <div style={unranked ? { borderBottom: `2px solid ${color}` } : { backgroundColor: color, color: textColor }} className={cn("flex shrink-0 items-center justify-center break-words p-3 text-center font-semibold", unranked ? "justify-between text-sm text-[#dac8a4]" : "w-16 flex-col gap-2 text-sm sm:w-24")}><span>{label}</span><span className={cn("text-[10px] font-normal", unranked ? "text-stone-500" : "opacity-70")}>{items.length}</span></div>
+  return <div className={cn("flex min-h-28 overflow-hidden rounded-sm border transition-colors duration-200", isOver ? "border-primary bg-primary/10" : "border-white/[.08] bg-black/10", unranked && "flex-col")}>
+    <div style={unranked ? { borderBottom: `2px solid ${color}` } : { backgroundColor: color, color: textColor }} className={cn("flex shrink-0 items-center justify-center break-words p-3 text-center font-semibold", unranked ? "justify-between text-sm text-[#dac8a4]" : "court-rank w-16 flex-col gap-2 text-base sm:w-24")}><span>{label}</span><span className={cn("text-[10px] font-normal", unranked ? "text-stone-500" : "opacity-70")}>{items.length}</span></div>
     <div ref={setNodeRef} className="min-w-0 flex-1 p-2.5">
       <SortableContext items={items.map((item) => item.id)} strategy={rectSortingStrategy}>
-        <div className="flex min-h-24 flex-wrap content-start gap-2.5">{items.map((item) => <SortableItem key={item.id} item={item} selectedId={selectedId} onInspect={onInspect} disabled={disabled} />)}{!items.length && <div className="flex min-h-24 flex-1 items-center justify-center px-4 text-center text-xs text-[#8a8e7d]">{unranked ? "Tout est classé, ou aucun résultat pour ces filtres." : "À vous de décider · glissez une carte ici"}</div>}</div>
+        <div className="flex min-h-24 flex-wrap content-start gap-2.5">{items.map((item) => <SortableItem key={item.id} item={item} selectedId={selectedId} onInspect={onInspect} disabled={disabled} />)}{!items.length && <div className="flex min-h-24 flex-1 items-center justify-center px-4 text-center text-xs text-[#8a8e7d]">{unranked ? "Aucune carte à classer." : "Glissez une carte ici"}</div>}</div>
       </SortableContext>
     </div>
   </div>;

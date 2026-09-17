@@ -21,7 +21,7 @@ export async function AppShell({ children }: { children: React.ReactNode }) {
       <AppHeader profile={profile} />
       <main className="mx-auto max-w-[1440px] px-4 py-8 sm:px-8 sm:py-10 lg:px-12">{children}</main>
       <footer className="mx-auto mt-16 flex max-w-[1440px] flex-wrap items-center justify-between gap-3 border-t border-border px-4 py-6 text-[10px] uppercase tracking-[.15em] text-slate-500 sm:px-8 lg:px-12">
-        <span>DuoTier · L’art de ne pas être d’accord</span><span>Votre collection. Vos règles.</span>
+        <span>DuoTier</span><span aria-hidden="true">♜ · ♛ · ♜</span>
       </footer>
     </div>
   );

@@ -3,12 +3,12 @@
 @tailwind utilities;
 
 :root {
-  --background: 75 12% 7%;
-  --foreground: 42 31% 89%;
-  --card: 70 11% 10%;
-  --muted: 70 9% 17%;
-  --primary: 40 45% 65%;
-  --border: 48 13% 22%;
+  --background: 15 6% 8%;
+  --foreground: 37 49% 85%;
+  --card: 15 7% 11%;
+  --muted: 18 9% 18%;
+  --primary: 12 68% 65%;
+  --border: 28 18% 27%;
   --danger: 8 62% 56%;
 }
 
@@ -21,30 +21,39 @@ body {
   color: hsl(var(--foreground));
   font-family: Arial, Helvetica, sans-serif;
   -webkit-font-smoothing: antialiased;
-  background-image: radial-gradient(ellipse at 65% -15%, rgba(154, 145, 93, .09), transparent 50%);
+  background-image: radial-gradient(ellipse at 85% 0%, #a0392418, transparent 55%), repeating-linear-gradient(115deg, transparent 0 3px, #efd7b402 3px 4px);
 }
-::selection { background: #a78c55; color: #171912; }
+::selection { background: #dd7057; color: #171515; }
 button, a, input, select, textarea { -webkit-tap-highlight-color: transparent; }
 button { touch-action: manipulation; }
 input[type="color"] { cursor: pointer; }
 input, select, textarea { color-scheme: dark; }
 img { -webkit-user-drag: none; }
 ::-webkit-scrollbar { width: 9px; height: 9px; }
-::-webkit-scrollbar-thumb { border: 2px solid transparent; border-radius: 999px; background: #5b5c4c; background-clip: padding-box; }
+::-webkit-scrollbar-thumb { border: 2px solid transparent; border-radius: 999px; background: #71584a; background-clip: padding-box; }
 
 @layer components {
   .display-font { font-family: Georgia, "Times New Roman", serif; font-weight: 400; letter-spacing: -.045em; }
-  .eyebrow { color: #c7af7d; font-size: .625rem; line-height: 1.6; font-weight: 600; letter-spacing: .2em; text-transform: uppercase; }
-  .panel { border: 1px solid hsl(var(--border)); background: hsl(var(--card)); border-radius: 1rem; }
-  .glass { border: 1px solid rgba(214, 199, 163, .13); background: rgba(39, 42, 30, .38); backdrop-filter: blur(20px); }
+  .eyebrow { color: #d5b994; font-size: .625rem; line-height: 1.6; font-weight: 600; letter-spacing: .2em; text-transform: uppercase; }
+  .panel { border: 1px solid hsl(var(--border)); background: hsl(var(--card)); border-radius: .25rem; box-shadow: inset 0 0 0 4px #e8cfad04; }
+  .glass { border: 1px solid #d6c7a321; background: #30242080; backdrop-filter: blur(20px); }
   .focus-ring { @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background; }
-  .atelier-rule { height: 1px; background: linear-gradient(90deg, #a99462, rgba(169, 148, 98, .1)); }
+  .atelier-rule { height: 1px; background: linear-gradient(90deg, #df735a, #e7cc9d20); }
   .atelier-feature {
-    background: radial-gradient(ellipse at 100% 100%, rgba(156, 138, 85, .13), transparent 70%), #22271b;
-    border: 1px solid #4a4f37;
+    background: radial-gradient(ellipse at 100% 100%, #a93b2525, transparent 70%), #211c19;
+    border: 1px solid #665040;
   }
-  .paper-card { color: #272c20; background: #e8e2ce; border: 1px solid #f3eddb; }
-  .ornament-ring { border: 1px solid rgba(193, 175, 130, .18); border-radius: 50%; }
+  .paper-card { color: #30241e; background: #ead8b8; border: 1px solid #f3e3c9; }
+  .ornament-ring { border: 1px solid #d9b5852e; border-radius: 50%; }
+  .court-frame { border: 1px solid #735645; outline: 1px solid #d9bc8b22; outline-offset: -6px; background: #211b18; }
+  .court-card { box-shadow: 0 3px 0 #0d0b0b; }
+  .court-card:hover { box-shadow: 0 5px 16px #0006, inset 0 0 0 1px #cf947647; }
+  .court-rank { position: relative; font-family: Georgia, serif; }
+  .court-rank::after { content: "◆"; font-size: 8px; opacity: .45; margin-top: 4px; }
+  .court-seal { border-radius: 50%; border: 3px double #f49c7c; background: #873a2d; color: #f4d7b1; box-shadow: 0 2px 0 #351914, inset 0 0 0 3px #602a22; }
+  .court-nav { border-image: linear-gradient(90deg, transparent, #bd8d60, transparent) 1; }
+  .court-link { transition: color .2s, transform .2s; }
+  .court-link:hover { color: #eea489; transform: translateY(-2px); }
 }
 
 @keyframes arrive { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
