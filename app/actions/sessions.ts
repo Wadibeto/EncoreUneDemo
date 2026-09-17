@@ -4,6 +4,7 @@ import { randomInt } from "node:crypto";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
+import { CHARACTERS } from "@/lib/character-catalog";
 import type { ActionState } from "@/lib/types";
 
 const titleSchema = z.string().trim().min(2, "Le titre doit contenir au moins 2 caractères.").max(80);
@@ -23,13 +24,25 @@ async function authenticatedClient() {
 export async function createTierListAction(_: ActionState, formData: FormData): Promise<ActionState> {
   const parsed = titleSchema.safeParse(formData.get("title"));
   if (!parsed.success) return { error: parsed.error.issues[0].message };
+  const category = z.enum(["games", "characters"]).safeParse(formData.get("category") ?? "games");
+  const catalogFilter = z.enum(["all", "crown-gambit", "sovereign-tower"]).safeParse(formData.get("catalog_filter") ?? "all");
+  if (!category.success || !catalogFilter.success) return { error: "Choisissez une catégorie et un univers valides." };
   const { supabase, user } = await authenticatedClient();
   if (!user) return { error: "Votre session a expiré." };
 
-  const { data, error } = await supabase.rpc("create_tier_list", {
-    p_title: parsed.data,
-    p_invite_code: inviteCode("T"),
-  });
+  const { data, error } = category.data === "characters"
+    ? await supabase.rpc("create_character_tier_list", {
+      p_title: parsed.data,
+      p_invite_code: inviteCode("T"),
+      p_catalog_filter: catalogFilter.data,
+      p_characters: CHARACTERS
+        .filter((character) => catalogFilter.data === "all" || character.game === catalogFilter.data)
+        .map((character) => ({ character_id: character.id, variant_id: character.variants[0].id })),
+    })
+    : await supabase.rpc("create_tier_list", {
+      p_title: parsed.data,
+      p_invite_code: inviteCode("T"),
+    });
   if (error || !data) return { error: error?.message ?? "Création impossible." };
   redirect(`/tierlists/${data}`);
 }

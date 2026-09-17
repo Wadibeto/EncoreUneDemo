@@ -21,7 +21,7 @@ export function AuthForm() {
     <div>
       <div className="mb-6 grid grid-cols-2 rounded-xl bg-black/25 p-1">
         {(["login", "register"] as const).map((item) => (
-          <button key={item} type="button" onClick={() => setMode(item)} className={`rounded-lg px-3 py-2 text-sm font-semibold transition ${mode === item ? "bg-white/10 text-white" : "text-slate-500 hover:text-slate-300"}`}>
+          <button key={item} type="button" aria-pressed={mode === item} disabled={pending} onClick={() => setMode(item)} className={`focus-ring rounded-lg px-3 py-2 text-sm font-semibold transition disabled:opacity-50 ${mode === item ? "bg-primary/15 text-primary" : "text-slate-400 hover:text-slate-300"}`}>
             {item === "login" ? "Connexion" : "Inscription"}
           </button>
         ))}
@@ -34,7 +34,7 @@ export function AuthForm() {
         <label className="block text-sm font-medium">E-mail<Input name="email" type="email" autoComplete="email" placeholder="vous@exemple.fr" className="mt-2" required /></label>
         <label className="block text-sm font-medium">Mot de passe<Input name="password" type="password" autoComplete={mode === "login" ? "current-password" : "new-password"} placeholder="8 caractères minimum" className="mt-2" minLength={8} required /></label>
         {state.error && <p role="alert" className="rounded-xl bg-red-500/10 p-3 text-sm text-red-300">{state.error}</p>}
-        {state.success && <p className="rounded-xl bg-emerald-500/10 p-3 text-sm text-emerald-300">{state.success}</p>}
+        {state.success && <p role="status" className="rounded-xl bg-emerald-500/10 p-3 text-sm text-emerald-300">{state.success}</p>}
         <Button type="submit" className="w-full" size="lg" disabled={pending}>
           {pending && <LoaderCircle className="size-4 animate-spin" />}
           {mode === "login" ? "Se connecter" : "Créer mon compte"}

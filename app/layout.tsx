@@ -1,19 +1,16 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
 import { Toaster } from "sonner";
 import "@/app/globals.css";
 
-const inter = Inter({ subsets: ["latin"], display: "swap" });
-
 export const metadata: Metadata = {
   title: { default: "DuoTier", template: "%s · DuoTier" },
-  description: "Classez vos jeux à deux et défiez-vous au Qui est-ce ?",
+  description: "Votre atelier de classements à deux. Jeux, personnages, armures et direction artistique : composez vos tier lists en temps réel.",
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="fr">
-      <body className={inter.className}>
+      <body>
         {children}
         <Toaster theme="dark" richColors position="bottom-right" />
       </body>

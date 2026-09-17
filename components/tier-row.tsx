@@ -1,38 +1,30 @@
 "use client";
-
 import { useDroppable } from "@dnd-kit/core";
 import { SortableContext, rectSortingStrategy, useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { GripVertical } from "lucide-react";
-import { GameCard } from "@/components/game-card";
+import { GripHorizontal } from "lucide-react";
+import { TierItemCard } from "@/components/tier-item-card";
+import { itemTitle } from "@/lib/tier-helpers";
 import type { TierItem, TierKey } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
-function SortableGame({ item }: { item: TierItem }) {
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: item.id, data: { tier: item.tier } });
-  return (
-    <div ref={setNodeRef} style={{ transform: CSS.Transform.toString(transform), transition }} className={cn("relative w-28 shrink-0 touch-none sm:w-32", isDragging && "z-20 opacity-30")} {...attributes} {...listeners}>
-      <GameCard game={item.game} compact />
-      <GripVertical className="absolute left-1 top-1 size-4 rounded bg-black/60 p-0.5 text-white/70 opacity-0 transition group-hover:opacity-100" />
-    </div>
-  );
+function SortableItem({ item, selectedId, onInspect, disabled }: { item: TierItem; selectedId?: string; onInspect: (id: string) => void; disabled: boolean }) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: item.id, disabled, data: { tier: item.tier } });
+  return <div ref={setNodeRef} style={{ transform: CSS.Transform.toString(transform), transition }} className={cn("relative w-[102px] shrink-0 sm:w-[116px]", isDragging && "z-20 opacity-25")}>
+    <TierItemCard item={item} selected={selectedId === item.id} onInspect={() => onInspect(item.id)} />
+    <button {...attributes} {...listeners} disabled={disabled} aria-label={`Déplacer ${itemTitle(item)}`} className="focus-ring mt-0.5 flex h-5 w-full touch-none cursor-grab items-center justify-center rounded text-[#bbaa89]/60 hover:bg-white/5 hover:text-[#ead9b8] active:cursor-grabbing"><GripHorizontal className="h-3.5 w-5" /></button>
+  </div>;
 }
-
-export function TierRow({ tierKey, label, color, items }: { tierKey: TierKey; label: string; color: string; items: TierItem[] }) {
-  const { setNodeRef, isOver } = useDroppable({ id: `tier:${tierKey}`, data: { tier: tierKey } });
+export function TierRow({ tierKey, label, color, items, selectedId, onInspect, disabled = false, unranked = false }: { tierKey: TierKey; label: string; color: string; items: TierItem[]; selectedId?: string; onInspect: (id: string) => void; disabled?: boolean; unranked?: boolean }) {
+  const { setNodeRef, isOver } = useDroppable({ id: `tier:${tierKey}`, disabled, data: { tier: tierKey } });
   const rgb = color.match(/[a-f\d]{2}/gi)?.map((part) => Number.parseInt(part, 16)) ?? [255, 255, 255];
-  const textColor = rgb[0] * 0.299 + rgb[1] * 0.587 + rgb[2] * 0.114 > 155 ? "#080b12" : "#ffffff";
-  return (
-    <div className={cn("flex min-h-36 overflow-hidden rounded-2xl border border-white/[0.08] bg-black/20 transition", isOver && "border-violet-400/60 bg-violet-400/[0.06]")}>
-      <div style={{ backgroundColor: color, color: textColor }} className="flex w-20 shrink-0 items-center justify-center break-words p-2 text-center text-sm font-black sm:w-24 sm:text-base">{label}</div>
-      <div ref={setNodeRef} className="min-w-0 flex-1 p-2">
-        <SortableContext items={items.map((item) => item.id)} strategy={rectSortingStrategy}>
-          <div className="flex min-h-28 flex-wrap content-start gap-2">
-            {items.map((item) => <SortableGame key={item.id} item={item} />)}
-            {!items.length && <div className="flex min-h-28 flex-1 items-center justify-center text-xs text-slate-600">Déposez un jeu ici</div>}
-          </div>
-        </SortableContext>
-      </div>
+  const textColor = rgb[0] * .299 + rgb[1] * .587 + rgb[2] * .114 > 155 ? "#151912" : "#ffffff";
+  return <div className={cn("flex min-h-28 overflow-hidden rounded-xl border transition", isOver ? "border-[#d3b578] bg-[#c8ad76]/10" : "border-white/[.08] bg-black/10", unranked && "flex-col")}>
+    <div style={unranked ? { borderBottom: `2px solid ${color}` } : { backgroundColor: color, color: textColor }} className={cn("flex shrink-0 items-center justify-center break-words p-3 text-center font-semibold", unranked ? "justify-between text-sm text-[#dac8a4]" : "w-16 flex-col gap-2 text-sm sm:w-24")}><span>{label}</span><span className={cn("text-[10px] font-normal", unranked ? "text-stone-500" : "opacity-70")}>{items.length}</span></div>
+    <div ref={setNodeRef} className="min-w-0 flex-1 p-2.5">
+      <SortableContext items={items.map((item) => item.id)} strategy={rectSortingStrategy}>
+        <div className="flex min-h-24 flex-wrap content-start gap-2.5">{items.map((item) => <SortableItem key={item.id} item={item} selectedId={selectedId} onInspect={onInspect} disabled={disabled} />)}{!items.length && <div className="flex min-h-24 flex-1 items-center justify-center px-4 text-center text-xs text-[#8a8e7d]">{unranked ? "Tout est classé, ou aucun résultat pour ces filtres." : "À vous de décider · glissez une carte ici"}</div>}</div>
+      </SortableContext>
     </div>
-  );
+  </div>;
 }

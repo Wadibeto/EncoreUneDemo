@@ -1,5 +1,19 @@
 # DuoTier
 
+## L’atelier — Armures & direction artistique
+
+Une seconde catégorie de tier lists permet de classer les personnages de **Crown Gambit** et **Sovereign Tower**, ensemble ou par jeu. La galerie initiale contient **51 entrées et 77 vues documentées** : illustrations officielles et portraits d’archives communautaires explicitement crédités. Elle ne prétend pas couvrir tous les PNJ et toutes les armures alternatives. La provenance et les limites sont détaillées dans [docs/character-sources.md](docs/character-sources.md).
+
+- Dans le dashboard, choisissez **Classer les personnages**, sélectionnez un univers et partagez le code d’invitation.
+- Cliquez sur une carte pour ouvrir sa fiche, examiner les variantes, changer le fond ou zoomer. La fiche reste accessible pendant le classement sur grand écran.
+- Choisissez **Utiliser ce visuel dans notre liste** pour partager une variante avec votre duo. Les vues pouvant révéler une évolution sont signalées.
+- Déplacez une carte avec sa poignée (souris, tactile ou clavier), ou choisissez son rang dans la fiche.
+- **Personnaliser** permet de renommer la liste, ajouter jusqu’à 20 rangs, modifier leurs noms/couleurs, les réordonner ou les retirer. Les cartes d’un rang retiré retournent dans la réserve.
+- Titres, rangs, couleurs, positions et visuels sont enregistrés et synchronisés. Filtres, zoom et exploration des fiches restent personnels. En cas de coupure, l’interface suspend les écritures jusqu’au rétablissement de la connexion.
+- Export PNG du classement et JSON avec les identifiants des personnages et visuels choisis.
+
+Appliquer les migrations **006 puis 007** avant de déployer cette interface. Les anciennes listes de jeux et les parties Qui est-ce ? sont conservées. Voir [docs/backend-upgrade.md](docs/backend-upgrade.md) pour le contrat des opérations et les tests PostgreSQL.
+
 DuoTier est une application privée pour deux joueurs : tier lists collaboratives, catalogue d’environ 50 jeux et mode « Qui est-ce ? » persistant. Elle utilise Next.js 15, TypeScript, Tailwind CSS, Supabase (Auth, PostgreSQL, RLS, Realtime) et Zustand.
 
 ## Fonctionnalités

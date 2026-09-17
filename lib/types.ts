@@ -16,25 +16,20 @@ export type Game = {
   created_at?: string;
 };
 
-export type TierKey =
-  | "unranked"
-  | "S"
-  | "A"
-  | "B"
-  | "C"
-  | "D"
-  | "E"
-  | "unfinished"
-  | "demo"
-  | "abandoned";
+/** Stable internal key; labels can be renamed independently. */
+export type TierKey = string;
+export type TierCategory = "games" | "characters";
+export type CatalogFilter = "all" | "crown-gambit" | "sovereign-tower";
 
 export type TierItem = {
   id: string;
   tier_list_id: string;
-  game_id: string;
+  game_id: string | null;
+  character_id: string | null;
+  variant_id: string | null;
   tier: TierKey;
   position: number;
-  game: Game;
+  game: Game | null;
 };
 
 export type TierDefinition = {
