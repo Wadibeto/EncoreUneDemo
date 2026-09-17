@@ -61,6 +61,7 @@ try {
   await db.exec("reset role");
   await apply("006_character_tier_lists.sql");
   await apply("007_settings_business_conflict.sql");
+  await apply("008_allow_profile_deletion_cascade.sql");
   await asUser(owner);
   check(await query("select id,game_id from public.tier_list_items where tier_list_id=$1 order by id", [gameList]), originalGameIds);
   check(await scalar("select category from public.tier_lists where id=$1", [gameList]), "games");
@@ -160,6 +161,24 @@ try {
   await asUser("", "anon");
   await denied("select public.create_character_tier_list('No','T-23456789','all','[]')", [], /permission denied/);
   await denied("select public.move_tier_item($1,$2,'S')", [board,items[0].id], /permission denied/);
+  // Deleting an account cascades its own boards, while edits on another
+  // member's board retain their state and only lose their updated_by reference.
+  await asUser(member);
+  const survivingBoard = await scalar("select public.create_tier_list('Surviving board', 'T-ABCD2345')");
+  const survivingItem = await scalar("select id from public.tier_list_items where tier_list_id=$1 order by position limit 1", [survivingBoard]);
+  await asUser(owner);
+  await query("select public.join_tier_list('T-ABCD2345')");
+  await query("select public.move_tier_item($1,$2,'S')", [survivingBoard,survivingItem]);
+  await db.exec("reset role");
+  await denied("update public.tier_list_items set tier='missing' where id=$1", [survivingItem], /Unknown tier/);
+  await query("delete from auth.users where id=$1", [owner]);
+  check(await scalar("select count(*)::int from public.profiles where id=$1", [owner]),0);
+  check(await scalar("select count(*)::int from public.tier_lists where owner_id=$1", [owner]),0);
+  check(await scalar("select count(*)::int from public.tier_lists where id=$1", [survivingBoard]),1);
+  check(await scalar("select count(*)::int from public.tier_list_items where tier_list_id=$1", [survivingBoard]),originalGameIds.length+1);
+  check(await scalar("select tier from public.tier_list_items where id=$1", [survivingItem]),"S");
+  check(await scalar("select updated_by from public.tier_list_items where id=$1", [survivingItem]),null);
+  check(await scalar("select count(*)::int from public.tier_list_members where tier_list_id=$1", [survivingBoard]),1);
   console.log(`PASS: ${assertions} PostgreSQL assertions; migration compatibility, RLS, authorization, custom tiers, variants, revision conflicts, ordering, and resets.`);
 } finally {
   await db.close();

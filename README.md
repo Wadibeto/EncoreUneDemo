@@ -12,7 +12,7 @@ Une seconde catégorie de tier lists permet de classer les personnages de **Crow
 - Titres, rangs, couleurs, positions et visuels sont enregistrés et synchronisés. Filtres, zoom et exploration des fiches restent personnels. En cas de coupure, l’interface suspend les écritures jusqu’au rétablissement de la connexion.
 - Export PNG du classement et JSON avec les identifiants des personnages et visuels choisis.
 
-Appliquer les migrations **006 puis 007** avant de déployer cette interface. Les anciennes listes de jeux et les parties Qui est-ce ? sont conservées. Voir [docs/backend-upgrade.md](docs/backend-upgrade.md) pour le contrat des opérations et les tests PostgreSQL.
+Appliquer les migrations **006, 007 puis 008** avant de déployer cette interface. Les anciennes listes de jeux et les parties Qui est-ce ? sont conservées. Voir [docs/backend-upgrade.md](docs/backend-upgrade.md) pour le contrat des opérations et les tests PostgreSQL.
 
 DuoTier est une application privée pour deux joueurs : tier lists collaboratives, catalogue d’environ 50 jeux et mode « Qui est-ce ? » persistant. Elle utilise Next.js 15, TypeScript, Tailwind CSS, Supabase (Auth, PostgreSQL, RLS, Realtime) et Zustand.
 
@@ -98,7 +98,7 @@ npx supabase start
 npx supabase db reset
 ```
 
-`db reset` applique les deux migrations puis `supabase/seed.sql`. Récupérez ensuite les clés locales :
+`db reset` applique toutes les migrations puis `supabase/seed.sql`. Récupérez ensuite les clés locales :
 
 ```bash
 npx supabase status
@@ -225,9 +225,9 @@ Les codes utilisent 8 caractères issus d’un alphabet sans caractères ambigus
 ## Performance et synchronisation
 
 - Les cartes de jeux sont mémoïsées et les images utilisent `next/image`.
-- Le board ne conserve dans Zustand que ses items, sans état global massif.
+- Le classement conserve ses cartes dans un état React local et relit les données après chaque écriture confirmée.
 - Le déplacement et les éliminations sont optimistes ; la base confirme ensuite l’opération.
-- Le réordonnancement est envoyé en un seul payload JSON et exécuté dans une transaction PostgreSQL.
+- Chaque déplacement envoie la carte, le rang cible et une éventuelle carte d’ancrage ; PostgreSQL applique l’opération atomiquement aux données courantes.
 - Les événements Realtime déclenchent une recharge courte et débouncée de la tier list, évitant les rafales de rendu.
 - Chaque effet Realtime supprime explicitement son channel au démontage.
 - Les notes privées sont sauvegardées après 500 ms d’inactivité.

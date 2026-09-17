@@ -1,11 +1,11 @@
 # Installation de la galerie collaborative
 
-Le code de cette version attend les migrations `supabase/migrations/006_character_tier_lists.sql` et `007_settings_business_conflict.sql`, après les migrations 001 à 005. Ces fichiers ne modifient pas automatiquement la base Supabase hébergée.
+Le code de cette version attend les migrations `supabase/migrations/006_character_tier_lists.sql`, `007_settings_business_conflict.sql` et `008_allow_profile_deletion_cascade.sql`, après les migrations 001 à 005. Ces fichiers ne modifient pas automatiquement la base Supabase hébergée.
 
 ## Mise en service
 
 1. Vérifier que les migrations 001 à 005 sont déjà appliquées sur le projet Supabase utilisé par Vercel. Sauvegarder la base selon la procédure habituelle du projet.
-2. Exécuter **tout** le fichier `006_character_tier_lists.sql`, puis `007_settings_business_conflict.sql`, dans l’éditeur SQL du projet Supabase, ou utiliser le déploiement de migrations Supabase déjà configuré pour ce projet. Si la migration 006 est déjà appliquée, appliquer uniquement 007. Chaque fichier utilise une transaction : une erreur annule l’ensemble de cette migration.
+2. Exécuter **tout** le fichier `006_character_tier_lists.sql`, puis `007_settings_business_conflict.sql` et `008_allow_profile_deletion_cascade.sql`, dans l’éditeur SQL du projet Supabase, ou utiliser le déploiement de migrations Supabase déjà configuré pour ce projet. Appliquer seulement les migrations encore absentes de la base. Chaque fichier utilise une transaction : une erreur annule l’ensemble de cette migration.
 3. Déployer cette version de l’application après la migration. Aucun nouveau secret ni aucune nouvelle variable d’environnement ne sont nécessaires. Conserver `NEXT_PUBLIC_SUPABASE_URL` et `NEXT_PUBLIC_SUPABASE_ANON_KEY` existantes.
 4. Ouvrir une ancienne liste de jeux, créer une galerie de personnages, et vérifier l’invitation avec deux comptes. Tester un déplacement, un changement de visuel, le renommage d’une ligne et sa suppression. Les deux fenêtres doivent converger vers la même configuration et les mêmes cartes.
 
@@ -39,13 +39,15 @@ Les événements Supabase Realtime concernent `tier_lists` et `tier_list_items`,
 
 La migration 007 corrige le code d’erreur des éditions périmées. `40001` signale une erreur de sérialisation transitoire et peut provoquer une boucle de transactions dans PostgREST 14; ce code ne doit pas être utilisé pour un conflit métier définitif. Le code `P0001` renvoie immédiatement l’erreur au client. Si un appel lancé avant la correction tourne encore, identifier le processus concerné dans les journaux PostgreSQL et `pg_stat_activity` avant de l’arrêter; modifier la fonction ne termine pas les appels déjà en cours. Voir la [procédure Supabase sur les boucles SQLSTATE 40001](https://supabase.com/docs/guides/troubleshooting/high-cpu-and-infinite-transaction-retries-when-using-custom-error-codes-in-rpc-functions-77326b).
 
+La migration 008 restreint le déclencheur de validation aux insertions et aux changements des colonnes de classement. La suppression d’un compte peut ainsi supprimer ses propres listes et remettre à `NULL` son attribution `updated_by` dans les autres listes, sans tenter de relire une liste déjà supprimée par la cascade. Les règles de validation des cartes et les autorisations restent identiques.
+
 ## Faire évoluer le catalogue
 
 Ajouter les données et illustrations sourcées dans `lib/character-catalog.ts`, puis créer une nouvelle migration d’insertion pour les identifiants de `character_catalog` et `character_variants`. Ne pas modifier rétroactivement la migration 006 une fois appliquée. Conserver les anciens identifiants pour préserver les listes existantes. Un nouveau personnage sera proposé à la création d’une nouvelle liste; il n’est pas ajouté automatiquement aux galeries déjà commencées.
 
 ## Vérification PostgreSQL isolée
 
-Le test `supabase/tests/character-tier-lists.mjs` charge les sept migrations dans PostgreSQL embarqué PGlite. Il prépare des comptes fictifs, imite `auth.uid()` et n’utilise aucun fichier `.env`, aucune connexion au projet hébergé et aucune donnée personnelle. Il vérifie explicitement que les conflits de révision renvoient `P0001`.
+Le test `supabase/tests/character-tier-lists.mjs` charge les huit migrations dans PostgreSQL embarqué PGlite. Il prépare des comptes fictifs, imite `auth.uid()` et n’utilise aucun fichier `.env`, aucune connexion au projet hébergé et aucune donnée personnelle. Il vérifie explicitement que les conflits de révision renvoient `P0001`, et que la suppression d’un compte conserve les listes appartenant à l’autre joueur.
 
 ```powershell
 npm install --prefix work/sql-verification --no-audit --no-fund @electric-sql/pglite
